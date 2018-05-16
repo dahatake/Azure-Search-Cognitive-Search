@@ -11,22 +11,16 @@ using System.Threading.Tasks;
 using System.Text;
 using System;
 
+
 namespace dahatakeTranslatorText
 {
 	// This function will simply translate messages sent to it.
 	public static class Function1
 	{
 		#region Execute Parameters
-		static string host = "https://api.cognitive.microsofttranslator.com";
-		static string path = "/translate?api-version=3.0";
-		// Translate to Japanese.
-		static string params_ = "&to=ja";
+		static string uri = "https://api.cognitive.microsofttranslator.com/translate?api-version=3.0&to=ja";
 
-		static string uri = host + path + params_;
-
-
-		// NOTE: Replace this example key with a valid subscription key.
-		static string key = "<key>";
+		static string key = Environment.GetEnvironmentVariable("TRANSLATOR_TEXT_KEY");
 		#endregion
 
 		#region classes used to serialize the response
@@ -112,6 +106,9 @@ namespace dahatakeTranslatorText
 			{
 
 				log.Info("[Translate] Function started.");
+				log.Info($"Key: {key}");
+				if (key == null)
+					return new BadRequestObjectResult($"[Translate][Error] TranslatorText KEY is missing in Environment Variable.");
 
 				string requestBody = new StreamReader(req.Body).ReadToEnd();
 				var requestBodyData = JsonConvert.DeserializeObject<cognitiveSkillRequest>(requestBody);
