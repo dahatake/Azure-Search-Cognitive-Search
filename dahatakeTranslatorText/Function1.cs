@@ -18,9 +18,8 @@ namespace dahatakeTranslatorText
 	public static class Function1
 	{
 		#region Execute Parameters
-		static string uri = "https://api.cognitive.microsofttranslator.com/translate?api-version=3.0&to=ja";
-
-		static string key = Environment.GetEnvironmentVariable("TRANSLATOR_TEXT_KEY");
+		static readonly string uri = "https://api.cognitive.microsofttranslator.com/translate?api-version=3.0&to=ja";
+		static readonly string key = Environment.GetEnvironmentVariable("TRANSLATOR_TEXT_KEY");
 		#endregion
 
 		#region classes used to serialize the response
@@ -63,14 +62,15 @@ namespace dahatakeTranslatorText
 
 		public class Data
 		{
-			public string[] text { get; set; }
+			public string text { get; set; }
 			public string language { get; set; }
 		}
 		#endregion
 
+		#region Cognitive Services - Translator Response
 
-		#region Translator result object
-		public class TranslationResult
+
+		public class TranslatorTextResponset
 		{
 			public Detectedlanguage detectedLanguage { get; set; }
 			public Translation[] translations { get; set; }
@@ -88,7 +88,9 @@ namespace dahatakeTranslatorText
 			public string to { get; set; }
 		}
 
+
 		#endregion
+
 
 		/// <summary>
 		/// Microsoft Translator Text call
@@ -96,6 +98,7 @@ namespace dahatakeTranslatorText
 		///		1,000 charactor
 		///		Single output -> it must to be multiple data input and output.
 		/// </summary>
+		/// <
 		[FunctionName("Translate")]
 		public static IActionResult Run(
 			[HttpTrigger(AuthorizationLevel.Function, "post", Route = null)]HttpRequest req,
@@ -106,7 +109,6 @@ namespace dahatakeTranslatorText
 			{
 
 				log.Info("[Translate] Function started.");
-				log.Info($"Key: {key}");
 				if (key == null)
 					return new BadRequestObjectResult($"[Translate][Error] TranslatorText KEY is missing in Environment Variable.");
 
@@ -122,10 +124,10 @@ namespace dahatakeTranslatorText
 				foreach (var data in requestBodyData.values)
 				{
 					string recordId = data.recordId;
-					string originalText = data.data.text[0];
+					string originalText = data.data.text;
 
 					var translatedText = TranslateText(originalText).Result;
-					log.Info($"[Translate] response:{translatedText}");
+					log.Info($"[Translate] translatedData: id:{recordId} - text:{translatedText}");
 
 					WebApiResponseRecord responseRecord = new WebApiResponseRecord();
 					responseRecord.recordId = recordId;
@@ -135,6 +137,8 @@ namespace dahatakeTranslatorText
 					response.values.Add(responseRecord);
 
 				}
+
+				log.Info($"[Translate] response:{response}");
 
 				return (ActionResult)new OkObjectResult(response);
 			}
@@ -169,7 +173,7 @@ namespace dahatakeTranslatorText
 				var responseBody = await response.Content.ReadAsStringAsync();
 				var responseJSON = responseBody.Substring(1, responseBody.Length - 2);
 
-				var result = JsonConvert.DeserializeObject<TranslationResult>(responseJSON);
+				var result = JsonConvert.DeserializeObject<TranslatorTextResponset>(responseJSON);
 				return result.translations[0].text;
 
 				//dynamic data = JsonConvert.DeserializeObject(responseJSON);
