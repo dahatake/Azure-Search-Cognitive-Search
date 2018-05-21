@@ -1,0 +1,6 @@
+GET /indexers/01-docs/status?api-version=2017-11-11-Preview HTTP/1.1
+Host: dahatakecogsearch.search.windows.net
+api-key: <Azure Search Key>
+Content-Type: application/json
+Cache-Control: no-cache
+

@@ -1,0 +1,61 @@
+PUT /indexers/01-docs?api-version=2017-11-11-Preview HTTP/1.1
+Host: dahatakecogsearch.search.windows.net
+api-key: <Azure Search Key>
+Content-Type: application/json
+Cache-Control: no-cache
+
+{
+  "name":"01-docs", 
+  "dataSourceName" : "docs",
+  "targetIndexName" : "cognitiveindex",
+  "skillsetName" : "01-doc-skillset",
+  "fieldMappings" : [
+        {
+          "sourceFieldName" : "metadata_storage_path",
+          "targetFieldName" : "id",
+          "mappingFunction" : 
+            { "name" : "base64Encode" }
+        },
+        {
+            "sourceFieldName": "metadata_storage_path",
+            "targetFieldName": "fileName"
+        },
+        {
+          "sourceFieldName" : "content",
+          "targetFieldName" : "content"
+        }
+   ],
+  "outputFieldMappings" : 
+  [
+        {
+          "sourceFieldName" : "/document/organizations", 
+          "targetFieldName" : "organizations"
+        },
+        {
+          "sourceFieldName" : "/document/people", 
+          "targetFieldName" : "people"
+        },
+        {
+          "sourceFieldName" : "/document/locations", 
+          "targetFieldName" : "locations"
+        },
+        {
+          "sourceFieldName" : "/document/pages/*/keyPhrases/*", 
+          "targetFieldName" : "keyphrases"
+        },
+        {
+            "sourceFieldName": "/document/languageCode",
+            "targetFieldName": "language"
+        }      
+  ],
+  "parameters":
+  {
+    "maxFailedItems":-1,
+    "maxFailedItemsPerBatch":-1,
+    "configuration": 
+    {
+        "dataToExtract": "contentAndMetadata",
+        "imageAction": "generateNormalizedImages"
+        }
+  }
+}

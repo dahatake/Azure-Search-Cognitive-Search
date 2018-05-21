@@ -1,0 +1,6 @@
+GET /indexes/cognitiveindex/docs?search=*&amp;$select=id,fileName&amp;$count=true&amp;facet=organizations&amp;facet=locations&amp;api-version=2017-11-11-Preview HTTP/1.1
+Host: dahatakecogsearch.search.windows.net
+api-key: <Azure Search Key>
+Content-Type: application/json
+Cache-Control: no-cache
+Postman-Token: 3baa2519-33fb-421a-b365-c123c03684ce

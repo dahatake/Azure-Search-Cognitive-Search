@@ -17,7 +17,7 @@ namespace dahatakeTranslatorText
 	// This function will simply translate messages sent to it.
 	public static class Function1
 	{
-		#region Execute Parameters
+		#region Parameters
 		static readonly string uri = "https://api.cognitive.microsofttranslator.com/translate?api-version=3.0&to=ja";
 		static readonly string key = Environment.GetEnvironmentVariable("TRANSLATOR_TEXT_KEY");
 		#endregion
@@ -47,51 +47,6 @@ namespace dahatakeTranslatorText
 		}
 		#endregion
 
-
-		#region Request
-		public class cognitiveSkillRequest
-		{
-			public Value[] values { get; set; }
-		}
-
-		public class Value
-		{
-			public string recordId { get; set; }
-			public Data data { get; set; }
-		}
-
-		public class Data
-		{
-			public string text { get; set; }
-			public string language { get; set; }
-		}
-		#endregion
-
-		#region Cognitive Services - Translator Response
-
-
-		public class TranslatorTextResponset
-		{
-			public Detectedlanguage detectedLanguage { get; set; }
-			public Translation[] translations { get; set; }
-		}
-
-		public class Detectedlanguage
-		{
-			public string language { get; set; }
-			public float score { get; set; }
-		}
-
-		public class Translation
-		{
-			public string text { get; set; }
-			public string to { get; set; }
-		}
-
-
-		#endregion
-
-
 		/// <summary>
 		/// Microsoft Translator Text call
 		/// Limitation:
@@ -107,45 +62,69 @@ namespace dahatakeTranslatorText
 
 			try
 			{
+				string recordId = null;
+				string originalText = null;
+				string translatedText = null;
 
 				log.Info("[Translate] Function started.");
+
+				// 1. Parameter Validations
 				if (key == null)
 					return new BadRequestObjectResult($"[Translate][Error] TranslatorText KEY is missing in Environment Variable.");
 
 				string requestBody = new StreamReader(req.Body).ReadToEnd();
-				var requestBodyData = JsonConvert.DeserializeObject<cognitiveSkillRequest>(requestBody);
+				log.Info($"[Translate] Request Data:{requestBody}");
 
-				log.Info($"[Translate] requestData:{requestBody}");
+				dynamic data = JsonConvert.DeserializeObject(requestBody);
+				if (data?.values == null)
+				{
+					return new BadRequestObjectResult("[Translate] Could not find values array");
+				}
+				if (data?.values.HasValues == false || data?.values.First.HasValues == false)
+				{
+					// It could not find a record, then return empty values array.
+					return new BadRequestObjectResult("[Translate] Could not find valid records in values array");
+				}
+
+				recordId = data?.values?.First?.recordId?.Value as string;
+				if (recordId == null)
+				{
+					return new BadRequestObjectResult("[Translate] recordId cannot be null");
+				}
+
+				originalText = data?.values?.First?.data?.text?.Value as string;
+				if (originalText == null)
+				{
+					return new BadRequestObjectResult("[Translate] text cannot be null");
+				}
+
+				// 1.1. Text clearnup for TextSplit task
+				originalText = originalText.Replace("\n", "").Trim();
+				log.Info($"[Translate] OriginalText:{originalText}");
+
+				// 2. Call Translator Text
+				translatedText = TranslateText(originalText).Result;
+				log.Info($"[Translate] TranslatedData: id:{recordId} - text:{translatedText}");
+
+				// 3. Build response JSON
+				WebApiResponseRecord responseRecord = new WebApiResponseRecord();
+				responseRecord.recordId = recordId;
+				responseRecord.data = new Dictionary<string, object>();
+				responseRecord.data.Add("text", translatedText);
 
 				// Put together response.
 				WebApiEnricherResponse response = new WebApiEnricherResponse();
 				response.values = new List<WebApiResponseRecord>();
+				response.values.Add(responseRecord);
 
-				foreach (var data in requestBodyData.values)
-				{
-					string recordId = data.recordId;
-					string originalText = data.data.text;
-
-					var translatedText = TranslateText(originalText).Result;
-					log.Info($"[Translate] translatedData: id:{recordId} - text:{translatedText}");
-
-					WebApiResponseRecord responseRecord = new WebApiResponseRecord();
-					responseRecord.recordId = recordId;
-					responseRecord.data = new Dictionary<string, object>();
-					responseRecord.data.Add("text", translatedText);
-
-					response.values.Add(responseRecord);
-
-				}
-
-				log.Info($"[Translate] response:{response}");
+				log.Info($"[Translate] Complate.");
 
 				return (ActionResult)new OkObjectResult(response);
 			}
 			catch (Exception e)
 			{
-				log.Error($"Exception: {e.Message}");
-				return new BadRequestObjectResult($"Exception: {e.Message}");
+				log.Error($"[Translate] Exception: {e.Message}");
+				return new BadRequestObjectResult($"[Translate] Exception: {e.Message}");
 			}
 		}
 
@@ -171,14 +150,12 @@ namespace dahatakeTranslatorText
 
 				var response = await client.SendAsync(request);
 				var responseBody = await response.Content.ReadAsStringAsync();
-				var responseJSON = responseBody.Substring(1, responseBody.Length - 2);
 
-				var result = JsonConvert.DeserializeObject<TranslatorTextResponset>(responseJSON);
-				return result.translations[0].text;
+				dynamic data = JsonConvert.DeserializeObject(responseBody);
+				var result = data?.First?.translations?.First?.text?.Value as string;
+				result = result.Replace("ÅE", "").Trim();
 
-				//dynamic data = JsonConvert.DeserializeObject(responseJSON);
-				//var result = data?.Values?.First?.translations?.text?.Value as string;
-				//return result;
+				return result;
 
 			}
 

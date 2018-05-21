@@ -1,0 +1,106 @@
+PUT /indexers/02-images?api-version=2017-11-11-Preview HTTP/1.1
+Host: dahatakecogsearch.search.windows.net
+api-key: <Azure Search Key>
+Content-Type: application/json
+Cache-Control: no-cache
+
+{
+    "name": "02-images",
+    "targetIndexName": "cognitiveindex",
+    "dataSourceName": "images",
+    "skillsetName": "02-images-skillset",
+    "parameters": {
+        "batchSize": 1,
+        "maxFailedItems": -1,
+        "maxFailedItemsPerBatch": -1,
+        "configuration": {
+            "dataToExtract": "contentAndMetadata",
+            "imageAction": "generateNormalizedImages",
+            "normalizedImageMaxWidth": 3200,
+            "normalizedImageMaxHeight": 3200
+        }
+    },
+    "fieldMappings": [
+        {
+            "sourceFieldName": "metadata_storage_path",
+            "targetFieldName": "id",
+            "mappingFunction": {
+                "name": "base64Encode"
+            }
+        },
+        {
+            "sourceFieldName": "metadata_storage_path",
+            "targetFieldName": "fileName"
+        }
+    ],
+    "outputFieldMappings": [
+        {
+            "sourceFieldName": "/document/normalized_images/0/Description/captions/0/text",
+            "targetFieldName": "description"
+        },
+        {
+          "sourceFieldName": "/document/normalized_images/0/descriptionja",
+            "targetFieldName": "descriptionja"
+        },
+        {
+            "sourceFieldName": "/document/normalized_images/*/Categories/*/detail/celebrities/*/name",
+            "targetFieldName": "celebrities"
+        },
+        {
+            "sourceFieldName": "/document/normalized_images/*/Categories/*/detail/*/landmarks/*/name",
+            "targetFieldName": "landmarks"
+        },
+        {
+      "sourceFieldName": "/document/normalized_images/*/ocrHandwrittenText",
+            "targetFieldName": "ocrhand"
+        },
+        {
+      "sourceFieldName": "/document/normalized_images/*/ocrPrintText",
+            "targetFieldName": "ocrprint"
+        },
+        {
+            "sourceFieldName": "/document/normalized_images/*/Tags/*/name",
+            "targetFieldName": "tags"
+        },
+
+        {
+            "sourceFieldName": "/document/normalized_images/*/Faces/*/age",
+            "targetFieldName": "age"
+        },
+
+        {
+            "sourceFieldName": "/document/normalized_images/*/Faces/*/gender",
+            "targetFieldName": "gender"
+        },
+        
+                {
+            "sourceFieldName": "/document/normalized_images/0/AdultCategory/adultScore",
+            "targetFieldName": "adultScore"
+        },
+
+        {
+            "sourceFieldName": "/document/normalized_images/0/AdultCategory/racyScore",
+            "targetFieldName": "racyScore"
+        },
+
+        {
+            "sourceFieldName": "/document/people",
+            "targetFieldName": "people"
+        },
+
+        {
+            "sourceFieldName": "/document/locations",
+            "targetFieldName": "locations"
+        },
+
+        {
+            "sourceFieldName": "/document/organizations",
+            "targetFieldName": "organizations"
+        },
+
+        {
+            "sourceFieldName": "/document/entities/*/value",
+            "targetFieldName": "entities"
+        }
+    ]
+}

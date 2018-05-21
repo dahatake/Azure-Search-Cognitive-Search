@@ -1,0 +1,94 @@
+PUT /skillsets/01-doc-skillset?api-version=2017-11-11-Preview HTTP/1.1
+Host: dahatakecogsearch.search.windows.net
+api-key: <Azure Search Key>
+Content-Type: application/json
+Cache-Control: no-cache
+
+{
+  "description": 
+  "Extract entities, detect language and extract key-phrases",
+  "skills":
+  [
+    {
+      "@odata.type": "#Microsoft.Skills.Text.NamedEntityRecognitionSkill",
+      "categories": [ "Person", "Location", "Organization" ],
+      "defaultLanguageCode": "en",
+      "inputs": [
+        {
+          "name": "text", 
+          "source": "/document/content"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "persons",
+          "targetName" : "people"
+        },
+        {
+          "name": "locations",
+          "targetName": "locations"
+        },
+        {
+          "name": "organizations", 
+          "targetName": "organizations"
+        }
+      ]
+    },
+    {
+      "@odata.type": "#Microsoft.Skills.Text.LanguageDetectionSkill",
+      "inputs": [
+        {
+          "name": "text", 
+          "source": "/document/content"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "languageCode",
+          "targetName": "languageCode"
+        }
+      ]
+    },
+    {
+      "@odata.type": "#Microsoft.Skills.Text.SplitSkill",
+      "textSplitMode" : "pages", 
+      "maximumPageLength": 4000,
+      "inputs": [
+      {
+        "name": "text",
+        "source": "/document/content"
+      },
+      { 
+        "name": "languageCode",
+        "source": "/document/languageCode"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "textItems",
+        "targetName": "pages"
+      }
+    ]
+  },
+  {
+      "@odata.type": "#Microsoft.Skills.Text.KeyPhraseExtractionSkill",
+      "context": "/document/pages/*",
+      "inputs": [
+        {
+          "name": "text", 
+          "source": "/document/pages/*"
+        },
+        {
+          "name":"languageCode", 
+          "source": "/document/languageCode"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "keyPhrases",
+          "targetName": "keyPhrases"
+        }
+      ]
+    }
+  ]
+}
