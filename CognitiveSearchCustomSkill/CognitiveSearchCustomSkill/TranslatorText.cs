@@ -12,10 +12,10 @@ using System.Text;
 using System;
 
 
-namespace dahatakeTranslatorText
+namespace CognitiveSearchCustomSkill
 {
 	// This function will simply translate messages sent to it.
-	public static class Function1
+	public static class TranslatorText
 	{
 		#region Parameters
 		static readonly string uri = "https://api.cognitive.microsofttranslator.com/translate?api-version=3.0&to=ja";

@@ -64,16 +64,6 @@ Cache-Control: no-cache
         },
 
         {
-            "sourceFieldName": "/document/normalized_images/*/Faces/*/age",
-            "targetFieldName": "age"
-        },
-
-        {
-            "sourceFieldName": "/document/normalized_images/*/Faces/*/gender",
-            "targetFieldName": "gender"
-        },
-        
-                {
             "sourceFieldName": "/document/normalized_images/0/AdultCategory/adultScore",
             "targetFieldName": "adultScore"
         },
@@ -101,6 +91,11 @@ Cache-Control: no-cache
         {
             "sourceFieldName": "/document/entities/*/value",
             "targetFieldName": "entities"
+        },
+        
+        {
+            "sourceFieldName": "/document/normalized_images/*/person",
+            "targetFieldName": "msftpeople"
         }
     ]
 }

@@ -1,0 +1,200 @@
+PUT /skillsets/02-images-skillset?api-version=2017-11-11-Preview HTTP/1.1
+Host: dahatakecogsearch.search.windows.net
+api-key: <Azure Search Key>
+Content-Type: application/json
+Cache-Control: no-cache
+
+{
+    "name": "02-images-skillset",
+    "description": "basic image skillset + Custom Skillset (Translator + Face)",
+    "skills": [
+        {
+            "@odata.type": "#Microsoft.Skills.Vision.ImageAnalysisSkill",
+            "visualFeatures": [
+                "Categories",
+                "Tags",
+                "Description",
+                "Faces",
+                "ImageType",
+                "Adult"
+            ],
+            "details": [ 
+              "Celebrities", 
+              "Landmarks" 
+            ],
+            "context": "/document/normalized_images/*",
+            "defaultLanguageCode": "en",
+            "inputs": [
+                {
+                    "name": "image",
+                    "source": "/document/normalized_images/*"
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "categories",
+                    "targetName": "Categories"
+                },
+                {
+                    "name": "tags",
+                    "targetName": "Tags"
+                },
+                {
+                    "name": "description",
+                    "targetName": "Description"
+                },
+                {
+                    "name": "faces",
+                    "targetName": "Faces"
+                },
+                {
+                    "name": "imageType",
+                    "targetName": "ImageType"
+                },
+                {
+                    "name": "adult",
+                    "targetName": "AdultCategory"
+                }
+            ]
+        },
+
+        {
+            "@odata.type": "#Microsoft.Skills.Text.LanguageDetectionSkill",
+            "inputs": [
+                {
+                    "name": "text",
+                    "source": "/document/normalized_images/0/Description/captions/0/text"
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "languageCode",
+                    "targetName": "languageCode"
+                }
+            ]
+        },
+      
+        {
+            "@odata.type": "#Microsoft.Skills.Vision.OcrSkill",
+            "description": null,
+            "defaultLanguageCode": "en",
+            "textExtractionAlgorithm": "printed",
+            "detectOrientation": true,
+            "context": "/document/normalized_images/*",
+            "inputs": [
+                {
+                    "name": "image",
+                    "source": "/document/normalized_images/*"
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "text",
+                    "targetName": "ocrPrintText"
+                },
+                {
+                    "name": "layoutText",
+                    "targetName": "octPrintlayoutText"
+                }
+            ]
+        },
+
+        {
+            "@odata.type": "#Microsoft.Skills.Vision.OcrSkill",
+            "context": "/document/normalized_images/*",
+            "textExtractionAlgorithm": "handwritten",
+            "defaultLanguageCode": "en",
+            "inputs": [
+                {
+                    "name": "image",
+                    "source": "/document/normalized_images/*"
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "text",
+                    "targetName": "ocrHandwrittenText"
+                },
+                {
+                    "name": "layoutText",
+                    "targetName": "ocrHandwrittenLayoutText"
+                }
+            ]
+        },
+        
+        {
+            "@odata.type": "#Microsoft.Skills.Text.NamedEntityRecognitionSkill",
+            "context": "/document",
+            "defaultLanguageCode": "en",
+            "categories": [
+                "Location",
+                "Organization",
+                "Person"
+            ],
+            "inputs": [
+                {
+                    "name": "text",
+                    "source": "/document/normalized_images/0/Description/captions/0/text"
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "persons",
+                    "targetName": "people"
+                },
+                {
+                    "name": "locations",
+                    "targetName": "locations"
+                },
+                {
+                    "name": "organizations",
+                    "targetName": "organizations"
+                },
+                {
+                    "name": "entities",
+                    "targetName": "entities"
+                }
+            ]
+        },
+
+        {
+            "@odata.type": "#Microsoft.Skills.Custom.WebApiSkill",
+            "description": "Custom Skill - Microsoft Translator",
+            "uri": "https://dahatakecognitivesearch-customskillset.azurewebsites.net/api/translate?code=<Azure Function Authentication Code>",
+            "batchSize": 1,
+            "context": "/document/normalized_images/*",
+            "inputs": [
+                {
+                    "name": "text",
+                    "source": "/document/normalized_images/0/Description/captions/0/text"
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "text",
+                    "targetName":"descriptionja"
+                }
+            ]
+        },
+        {
+            "@odata.type": "#Microsoft.Skills.Custom.WebApiSkill",
+            "description": "Custom Skill - Microsoft Face API",
+            "uri": "https://dahatakecognitivesearch-customskillset.azurewebsites.net/api/FaceIdentify?code=<Azure Function Authentication Code>",
+            "batchSize": 1,
+            "context": "/document/normalized_images/*",
+            "inputs": [
+                {
+                    "name": "image",
+                    "source": "/document/normalized_images/*"
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "name",
+                    "targetName":"person"
+                }
+            ]
+        }
+        
+    ]
+}
