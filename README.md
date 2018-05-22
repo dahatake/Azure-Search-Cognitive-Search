@@ -51,7 +51,7 @@ Custom skillset のサンプルです。いずれも Azure Cognitive Services �
     ```JSON
     {
         "fields": [
-            // other fields go here.
+            ...
             {
                 "name": "enriched",
                 "type": "Edm.String",
